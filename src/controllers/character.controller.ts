@@ -2,15 +2,14 @@ import {
   Count,
   CountSchema,
   Filter,
-
   repository,
   Where
 } from '@loopback/repository';
 import {
-  get,
-  getModelSchemaRef, param,
+  del, get,
+  getFilterSchemaFor,
+  getWhereSchemaFor, param,
   patch, post,
-
   requestBody
 } from '@loopback/rest';
 import {Character} from '../models';
@@ -22,6 +21,10 @@ export class CharacterController {
     public characterRepository: CharacterRepository,
   ) {}
 
+  /**
+   * create character
+   * @param character character
+   */
   @post('/characters', {
     responses: {
       '200': {
@@ -31,17 +34,20 @@ export class CharacterController {
     },
   })
   async create(@requestBody() character: Character): Promise<Character> {
-    //add following lines
-    // let characterId = 1;
-    // while (await this.characterRepository.exists(characterId)) {
-    //   characterId++;
-    // }
-    // character.id = characterId;
-    //add above lines
-    //return this.characterRepository.create(character);
+    /**remove this
+    let characterId = 1;
+    while(await this.characterRepository.exists(characterId)){
+      characterId ++;
+    }
+    character.id = characterId;
+    */
     return this.characterRepository.create(character);
   }
 
+  /**
+   * count character
+   * @param where filter
+   */
   @get('/characters/count', {
     responses: {
       '200': {
@@ -51,32 +57,37 @@ export class CharacterController {
     },
   })
   async count(
-    @param.where(Character) where?: Where<Character>,
+    @param.query.object('where', getWhereSchemaFor(Character)) where?: Where,
   ): Promise<Count> {
     return this.characterRepository.count(where);
   }
 
+  /**
+   * show all character
+   * @param where filter
+   */
   @get('/characters', {
     responses: {
       '200': {
         description: 'Array of Character model instances',
         content: {
           'application/json': {
-            schema: {
-              type: 'array',
-              items: getModelSchemaRef(Character, {includeRelations: true}),
-            },
+            schema: {type: 'array', items: {'x-ts-type': Character}},
           },
         },
       },
     },
   })
   async find(
-    @param.filter(Character) filter?: Filter<Character>,
+    @param.query.object('filter', getFilterSchemaFor(Character)) filter?: Filter,
   ): Promise<Character[]> {
     return this.characterRepository.find(filter);
   }
 
+  /**
+   * path all character
+   * @param where filter
+   */
   @patch('/characters', {
     responses: {
       '200': {
@@ -86,81 +97,60 @@ export class CharacterController {
     },
   })
   async updateAll(
-    @requestBody({
-      content: {
-        'application/json': {
-          schema: getModelSchemaRef(Character, {partial: true}),
-        },
-      },
-    })
-    character: Character,
-    @param.where(Character) where?: Where<Character>,
+    @requestBody() character: Character,
+    @param.query.object('where', getWhereSchemaFor(Character)) where?: Where,
   ): Promise<Count> {
     return this.characterRepository.updateAll(character, where);
   }
 
+  /**
+   * show character by id
+   * @param id id
+   */
   @get('/characters/{id}', {
     responses: {
       '200': {
         description: 'Character model instance',
-        content: {
-          'application/json': {
-            schema: {'x-ts-type': Character},
-          },
-        },
+        content: {'application/json': {schema: {'x-ts-type': Character}}},
       },
     },
   })
-  async findById(
-    //@param.path.number('id') id: number
-    @param.path.string('id') id: string
-  ): Promise<Character> {
+  async findById(@param.path.string('id') id: string): Promise<Character> {
     return this.characterRepository.findById(id);
   }
 
-  // @patch('/characters/{id}', {
-  //   responses: {
-  //     '204': {
-  //       description: 'Character PATCH success',
-  //     },
-  //   },
-  // })
-  // async updateById(
-  //   @param.path.number('id') id: number,
-  //   @requestBody({
-  //     content: {
-  //       'application/json': {
-  //         schema: getModelSchemaRef(Character, {partial: true}),
-  //       },
-  //     },
-  //   })
-  //   character: Character,
-  // ): Promise<void> {
-  //   await this.characterRepository.updateById(id, character);
-  // }
+  /**
+   * patch character by id
+   * @param where filter
+   */
+  @patch('/characters/{id}', {
+    responses: {
+      '204': {
+        description: 'Character PATCH success',
+      },
+    },
+  })
+  async updateById(
+    @param.path.string('id') id: string,
+    @requestBody() character: Character,
+  ): Promise<void> {
+    await this.characterRepository.updateById(id, character);
+  }
 
-  // @put('/characters/{id}', {
-  //   responses: {
-  //     '204': {
-  //       description: 'Character PUT success',
-  //     },
-  //   },
-  // })
-  // async replaceById(
-  //   @param.path.number('id') id: number,
-  //   @requestBody() character: Character,
-  // ): Promise<void> {
-  //   await this.characterRepository.replaceById(id, character);
-  // }
-
-  // @del('/characters/{id}', {
-  //   responses: {
-  //     '204': {
-  //       description: 'Character DELETE success',
-  //     },
-  //   },
-  // })
-  // async deleteById(@param.path.number('id') id: number): Promise<void> {
-  //   await this.characterRepository.deleteById(id);
-  // }
+  /**
+   * delete character by id
+   * @param where filter
+   */
+  @del('/characters/{id}', {
+    responses: {
+      '204': {
+        description: 'Character DELETE success',
+      },
+    },
+  })
+  async deleteById(
+    @param.path.string('id') id: string
+  ): Promise<void> {
+    await this.characterRepository.deleteById(id);
+  }
 }
